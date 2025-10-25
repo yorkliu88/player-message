@@ -151,6 +151,13 @@
     $('#contactForm').addEventListener('submit', submitForm);
     resizeFrame();
   });
+  // Extra mobile-safe resize (especially for iPhone inside Google Sites)
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'resize') {
+    const frame = document.querySelector('iframe[src*="yorkliu88.github.io"]');
+    if (frame) frame.style.height = event.data.height + 'px';
+  }
+});
 </script>
 </body>
 </html>
