@@ -53,10 +53,11 @@
       <div id="alert" class="hidden mt-3 p-2 rounded-lg text-sm"></div>
     </div>
 
-    <footer class="text-center text-xs text-gray-500 mt-3">© <span id="year"></span> RisingStars Infinite</footer>
+    <footer class="text-center text-xs text-gray-500 mt-3">© 2025 RisingStars Infinite</footer>
   </main>
 
 <script>
+  // === CONFIGURATION ===
   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyeBrxULj6p18BVZGMfBHhkx5PNsF6g7HGPnhhmKgkV8y3Z6f5DswePzoLZrRZC6CnUHQ/exec';
   const API_KEY = 'xK8p9R2q7T3mL1z5AA';
 
@@ -87,11 +88,11 @@
       const sel = $('#player');
       sel.innerHTML = '';
       if (!data.ok){
-        sel.innerHTML = '<option disabled selected>Roster unavailable</option>';
+        sel.innerHTML = '<option disabled selected>No players found</option>';
         showAlert(data.error || 'Unable to load roster', 'error');
         return;
       }
-      sel.insertAdjacentHTML('beforeend', '<option value="" selected disabled>Select your entry…</option>');
+      sel.insertAdjacentHTML('beforeend', '<option value="" selected disabled>Select Player ...</option>');
       data.items.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;
@@ -99,7 +100,7 @@
         sel.appendChild(opt);
       });
     } catch(err){
-      $('#player').innerHTML = '<option disabled selected>Network error loading roster</option>';
+      $('#player').innerHTML = '<option disabled selected>No players found</option>';
       showAlert('Network error while loading roster. Try again.', 'error');
     }
   }
@@ -111,7 +112,7 @@
     const id = $('#player').value?.trim();
     const phoneRaw = $('#phone').value?.trim();
     const phone = normalizeUSPhone(phoneRaw);
-    if (!id){ showAlert('Please select your entry.', 'error'); return; }
+    if (!id){ showAlert('Please select your player.', 'error'); return; }
     if (!phone){ showAlert('Please enter a valid US mobile number.', 'error'); return; }
 
     const body = new URLSearchParams({ id, phone, key: API_KEY });
@@ -146,7 +147,7 @@
   const observer = new MutationObserver(resizeFrame);
   observer.observe(document.body, { childList: true, subtree: true });
   window.addEventListener('load', () => {
-    $('#year').textContent = new Date().getFullYear();
+    $('#year')?.textContent = new Date().getFullYear();
     loadRoster();
     $('#contactForm').addEventListener('submit', submitForm);
     resizeFrame();
