@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tournament Contact Capture</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    /* Prevent zoom on iOS number inputs */
+    input[type=tel]{ font-size:16px; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center p-4">
+  <main class="w-full max-w-xl">
+    <div class="bg-white shadow-xl rounded-2xl p-6">
+      <h1 class="text-2xl font-semibold mb-1">Check In Your Mobile Number</h1>
+      <p class="text-sm text-gray-600 mb-6">Select your name and enter a US mobile number. Used only for tournament notifications (e.g., staging calls).</p>
+
+      <form id="contactForm" class="space-y-4" novalidate>
+        <div>
+          <label for="player" class="block text-sm font-medium mb-1">Player</label>
+          <select id="player" required class="w-full rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="" selected disabled>Loading roster…</option>
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Shown as <em>First L. (USAB_ID)</em>. Full last name is not displayed.</p>
+        </div>
+
+        <div>
+          <label for="phone" class="block text-sm font-medium mb-1">Mobile number</label>
+          <input id="phone" name="phone" inputmode="numeric" autocomplete="tel" placeholder="e.g., (415) 555-1234" class="w-full rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+          <p class="text-xs text-gray-500 mt-1">US numbers only. Dashes/parentheses/spaces are okay.</p>
+        </div>
+
+        <button type="submit" class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 transition">Save Number</button>
+      </form>
+
+      <div id="alert" class="hidden mt-4 p-3 rounded-xl"></div>
+      <p class="mt-6 text-xs text-gray-500">By submitting, you consent to receive tournament SMS. Data retained for the event and may be removed afterwards.</p>
+    </div>
+
+    <footer class="text-center text-xs text-gray-500 mt-4">© <span id="year"></span> Tournament Desk</footer>
+  </main>
+
+<script>
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyeBrxULj6p18BVZGMfBHhkx5PNsF6g7HGPnhhmKgkV8y3Z6f5DswePzoLZrRZC6CnUHQ/exec';
+  const API_KEY = 'xK8p9R2q7T3mL1z5AA';
+
+  const $ = s => document.querySelector(s);
+  const alertBox = $('#alert');
+
+  function showAlert(msg, type='success'){
+    alertBox.textContent = msg;
+    alertBox.className = `mt-4 p-3 rounded-xl ${type==='success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`;
+    alertBox.classList.remove('hidden');
+  }
+
+  function normalizeUSPhone(input){
+    const digits = String(input).replace(/\D/g, '');
+    if (digits.length === 10) return '+1' + digits;
+    if (digits.length === 11 && digits.startsWith('1')) return '+1' + digits.slice(1);
+    return null;
+  }
+
+  async function loadRoster(){
+    try{
+      const url = `${WEB_APP_URL}?roster=1&key=${encodeURIComponent(API_KEY)}`;
+      const res = await fetch(url, { method: 'GET', mode: 'cors' });
+      const data = await res.json();
+      const sel = $('#player');
+      sel.innerHTML = '';
+      if (!data.ok){
+        sel.innerHTML = '<option disabled selected>Roster unavailable</option>';
+        showAlert(data.error || 'Unable to load roster', 'error');
+        return;
+      }
+      sel.insertAdjacentHTML('beforeend', '<option value="" selected disabled>Select your entry…</option>');
+      data.items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.label;
+        sel.appendChild(opt);
+      });
+    } catch(err){
+      const sel = $('#player');
+      sel.innerHTML = '<option disabled selected>Network error loading roster</option>';
+      showAlert('Network error while loading roster. Try again.', 'error');
+    }
+  }
+
+  async function submitForm(e){
+    e.preventDefault();
+    alertBox.classList.add('hidden');
+    const id = $('#player').value.trim();
+    const phoneRaw = $('#phone').value.trim();
+    const phone = normalizeUSPhone(phoneRaw);
+    if (!id){ showAlert('Please select your entry.', 'error'); return; }
+    if (!phone){ showAlert('Please enter a valid US mobile number.', 'error'); return; }
+
+    const body = new URLSearchParams({ id, phone, key: API_KEY });
+
+    try{
+      const res = await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body
+      });
+      const data = await res.json();
+      if (data.ok){
+        const masked = phone.replace(/\+(\d)(\d{3})(\d{3})(\d{4})/, '+$1*** ***$4');
+        showAlert(`Saved ${masked}. ${data.replaced ? 'Updated existing number.' : 'Thanks!'}`,'success');
+        $('#contactForm').reset();
+      } else {
+        showAlert(data.error || 'Submit failed', 'error');
+      }
+    } catch(err){
+      showAlert('Network error. Please try again.', 'error');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    $('#year').textContent = new Date().getFullYear();
+    loadRoster();
+    $('#contactForm').addEventListener('submit', submitForm);
+  });
+</script>
+</body>
+</html>
