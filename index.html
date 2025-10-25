@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tournament Check-In</title>
+  <title>Register Staging Notification</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="color-scheme" content="light dark" />
   <style>
@@ -17,16 +17,14 @@
       color: #111 !important;
       background-color: #fff !important;
     }
-    ::placeholder {
-      color: #9ca3af; /* Tailwind gray-400 */
-    }
+    ::placeholder { color: #9ca3af; } /* Tailwind gray-400 */
   </style>
 </head>
 
 <body class="flex items-center justify-center min-h-screen p-3 text-gray-900">
   <main class="w-full max-w-sm">
     <div class="bg-white shadow-lg rounded-xl p-4">
-      <h1 class="text-lg font-semibold mb-3 text-center">Tournament Check-In</h1>
+      <h1 class="text-lg font-semibold mb-3 text-center">Register Staging Notification</h1>
 
       <form id="contactForm" class="space-y-3" novalidate>
         <div>
@@ -38,23 +36,24 @@
         </div>
 
         <div>
-          <label for="phone" class="block text-sm font-medium mb-1">Mobile number</label>
-          <input id="phone" name="phone" inputmode="numeric" autocomplete="tel"
-            placeholder="e.g., (415) 555-1234"
-            class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white text-gray-900 placeholder-gray-400"
-            required />
+          <label class="block text-sm font-medium mb-1" for="phone">Mobile number</label>
+          <div class="flex items-center gap-2">
+            <input id="phone" name="phone" inputmode="numeric" autocomplete="tel"
+              placeholder="e.g., (415) 555-1234"
+              class="flex-1 rounded-lg border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white text-gray-900 placeholder-gray-400"
+              required />
+            <button type="submit"
+              class="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-3 py-2 transition">
+              Submit
+            </button>
+          </div>
         </div>
-
-        <button type="submit"
-          class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 transition">
-          Save Number
-        </button>
       </form>
 
       <div id="alert" class="hidden mt-3 p-2 rounded-lg text-sm"></div>
     </div>
 
-    <footer class="text-center text-xs text-gray-500 mt-3">© <span id="year"></span> Tournament Desk</footer>
+    <footer class="text-center text-xs text-gray-500 mt-3">© <span id="year"></span> RisingStars Infinite</footer>
   </main>
 
 <script>
@@ -96,7 +95,7 @@
       data.items.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;
-        opt.textContent = item.label;
+        opt.textContent = item.label; // First L. (USAB_ID)
         sel.appendChild(opt);
       });
     } catch(err){
@@ -108,8 +107,9 @@
   async function submitForm(e){
     e.preventDefault();
     alertBox.classList.add('hidden');
-    const id = $('#player').value.trim();
-    const phoneRaw = $('#phone').value.trim();
+
+    const id = $('#player').value?.trim();
+    const phoneRaw = $('#phone').value?.trim();
     const phone = normalizeUSPhone(phoneRaw);
     if (!id){ showAlert('Please select your entry.', 'error'); return; }
     if (!phone){ showAlert('Please enter a valid US mobile number.', 'error'); return; }
